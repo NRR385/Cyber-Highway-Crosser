@@ -1,0 +1,26 @@
+{
+    "version":  "1.0.0",
+    "name":  "cyber-highway-crosser",
+    "scripts":  {
+                    "preview":  "vite preview",
+                    "build":  "tsc -b \u0026\u0026 vite build",
+                    "dev":  "vite",
+                    "lint":  "eslint ."
+                },
+    "devDependencies":  {
+                            "@tailwindcss/vite":  "^4.3.3",
+                            "vite":  "^8.1.1",
+                            "typescript":  "~6.0.2",
+                            "@types/react-dom":  "^19.2.3",
+                            "tailwindcss":  "^4.3.3",
+                            "@types/react":  "^19.2.17",
+                            "@vitejs/plugin-react":  "^6.0.3"
+                        },
+    "type":  "module",
+    "dependencies":  {
+                         "lucide-react":  "^0.475.0",
+                         "react":  "^19.2.7",
+                         "react-dom":  "^19.2.7"
+                     },
+    "private":  true
+}
