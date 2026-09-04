@@ -222,31 +222,26 @@ npm run lint
 
 ## 🌍 Open Source Contribution
 
-This game was developed as an **open-source contribution** to [QuickPlayZone](https://github.com/shamilahmdt/quickplay-zone), a community-maintained collection of browser-based web games.
+This project was originally developed as an **open-source contribution** to
+[QuickPlayZone](https://github.com/shamilahmdt/quickplay-zone).
 
-I worked within the existing QuickPlayZone codebase — following its established conventions, folder structure, and shared component patterns — and contributed **Cyber Highway Crosser** through a pull request:
+The game was contributed through merged pull requests and later maintained
+as a standalone repository for continued development and experimentation.
 
-> 🔗 **Original project:** [github.com/shamilahmdt/quickplay-zone](https://github.com/shamilahmdt/quickplay-zone)
->
-> 🔗 **My contribution PR:** [quickplay-zone/pull/53](https://github.com/shamilahmdt/quickplay-zone/pull/53)
+### Contribution
 
-### What this involved
-
-- **Working in an existing codebase** — understanding the project's architecture, shared utilities (`storage.ts`, `audio.ts`), and component conventions before writing a single line of game code
-- **Git branching workflow** — creating a feature branch, keeping commits scoped and descriptive
-- **Pull request process** — opening a PR against the upstream repository with a clear description of the contribution
-- **Integrating with shared infrastructure** — reusing the project's existing `AudioManager`, `storage` module, and `ThemeContext` rather than reinventing them
-- **Meeting CI / build requirements** — ensuring the game builds cleanly with `tsc` and Vite with no type errors
-
-> **Note:** I am the contributor of *Cyber Highway Crosser* within QuickPlayZone. I am not the maintainer or owner of the QuickPlayZone project.
+- 🎮 Built **Cyber Highway Crosser** as a playable web game
+- 🔀 Contributed the game to QuickPlayZone
+- 📝 Added the game to the project's README
+- 🤝 Collaborated through GitHub pull requests and code review
 
 ---
 
 ## 📄 License
 
-This standalone repository does not currently include its own `LICENSE` file.
+This project is licensed under the **MIT License**.
 
-The upstream [QuickPlayZone](https://github.com/shamilahmdt/quickplay-zone) project — to which this game was contributed — is licensed under the **MIT License** (Copyright © 2026 Shamil Ahammed T).
+See the [LICENSE](LICENSE) file for the full license text.
 
 ---
 
