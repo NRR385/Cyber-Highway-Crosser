@@ -1,6 +1,6 @@
 # 🛣️ Cyber Highway Crosser
 
-> A cyberpunk arcade game where you guide a data packet through neon traffic and hazardous digital rivers to reach the server docks.
+> A cyberpunk arcade game inspired by the classic Frogger formula. Guide your data packet across high-speed neon traffic lanes and digital river platforms to reach five secure server docks.
 
 ![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=white&style=flat-square)
 ![TypeScript](https://img.shields.io/badge/TypeScript-6-3178C6?logo=typescript&logoColor=white&style=flat-square)
@@ -11,60 +11,59 @@
 
 ---
 
-## 📸 About the Game
+## 📸 Preview
 
-Cyber Highway Crosser is a cyberpunk-themed twist on the classic Frogger arcade formula. You play as a data packet navigating a dangerous neon highway — dodging oncoming vehicles in traffic lanes and hopping across moving platform streams to reach five server docks at the top of the board.
-
-The game is built entirely in the browser using **React**, **TypeScript**, and the **HTML5 Canvas API**, with synthesised chiptune audio powered by the **Web Audio API**.
+> *A visual gameplay preview and live demo link will be added in an upcoming update.*
 
 ---
 
 ## ✨ Features
 
-- **Cyberpunk visual style** — neon-lit canvas with glowing vehicles, blinking hit-flash effects, and a dark-first colour palette
-- **Three difficulty modes** — Easy, Medium, and Hard, each changing vehicle speed and spawn density
-- **Mixed lane types** — four traffic lanes (kill on contact) and three platform/river lanes (drown if no platform is under you)
-- **Five server docks** to fill per round, with a completion bonus when all five are reached
-- **3 lives** with hit-flash invincibility frames after each hit
-- **Chiptune audio** — looping BGM sequencer and distinct sound effects for hits, docks, game over, and level completion, all powered by the Web Audio API
-- **Mute toggle** — audio can be silenced at any time
-- **Local leaderboard** — top-10 scores per difficulty mode, stored in `localStorage`
-- **High score prompt** — enter your name when you set a new personal best
-- **Dark / Light theme toggle** — persisted across sessions via `localStorage`
-- **On-screen D-pad** — touch-friendly directional controls for mobile and tablet play
-- **Keyboard controls** — Arrow keys and WASD both supported
+### Gameplay
+- **Cyberpunk Frogger mechanics** — Navigate a digital packet across deadly traffic lanes and moving river platforms to reach server docks.
+- **Three difficulty modes** — Easy, Medium, and Hard, adjusting entity speeds and spawn intervals.
+- **Multi-zone board** — Four traffic lanes, three river platform lanes, a central safe median, and a starting safety strip.
+- **Five server docks** — Fill all five docks in a round to earn a cycle bonus and reset the docks for an endless arcade challenge.
+- **Damage protection** — 3 lives per game with a 60-frame hit-flash invincibility buffer after collisions.
+
+### Audio & UI
+- **Real-time synthesized audio** — Chiptune background music sequencer and distinct sound effects generated entirely via the Web Audio API (no audio asset downloads).
+- **Mute control** — Instant audio mute/unmute toggle.
+- **Neon cyberpunk aesthetics** — Dark-mode-first color scheme with glowing neon vehicles, grid lines, and a light theme toggle.
+- **Dual control schemes** — Full keyboard support (Arrow keys + WASD) and an on-screen touch D-pad for mobile and tablet play.
+
+### Progression
+- **Local leaderboard** — Tracks the top 10 scores per difficulty level in `localStorage`.
+- **High score prompt** — Input your callsign or record scores anonymously when hitting a new personal best.
+- **Session analytics** — Records play count and last-played timestamps per game mode.
 
 ---
 
 ## 🎯 Gameplay
 
 ### Objective
-Guide your data packet from the bottom spawn row to the **five server docks** at the top of the board. Fill all five docks to earn a round-completion bonus and reset the board for another cycle.
+Guide your data packet from the bottom safe spawn zone to the **five server docks** at the top of the canvas. Successfully filling all five docks awards a **+50 bonus** and resets the docks for the next cycle.
 
 ### Movement
-The player moves one tile at a time in any of the four cardinal directions. There is no time limit per move — the danger comes from the environment.
+The packet moves tile-by-tile in four directions. There is no countdown timer; survival depends on pattern recognition and timing.
 
-### Obstacles
-The board is split into **10 rows**:
+### Board Layout
 
-| Row(s) | Zone | Effect |
-|--------|------|--------|
-| 9 | **Start zone** | Safe spawn area |
-| 8–6 | **River / platform lanes** | Must stand on a moving platform; fall off-screen or miss a platform and you lose a life |
-| 5 | **Median strip** | Safe rest area |
-| 4–1 | **Traffic lanes** | Contact with any vehicle costs a life |
-| 0 | **Server dock row** | Landing on an empty dock scores points; landing on a filled dock or off a dock costs a life |
+The playfield spans a **480×480 px** grid divided into 10 rows (48 px each):
 
-### Scoring
-- **+10 points** for each server dock reached
-- **+50 bonus points** when all five docks are filled in one cycle (docks then reset)
-- Scores are tracked independently per difficulty mode
+| Row(s) | Zone | Description / Hazard |
+|:---:|---|---|
+| **0** | **Server Docks** | Goal area. Reaching an open dock scores points; hitting an occupied dock or blank space costs a life. |
+| **1–4** | **Neon Highway** | Four traffic lanes moving at alternating directions and speeds. Contact with vehicles costs a life. |
+| **5** | **Median Strip** | Safe resting zone between the highway and digital river. |
+| **6–8** | **Digital River** | Moving platform streams. You must ride platforms; falling into the stream costs a life. |
+| **9** | **Start Zone** | Safe spawn area. |
 
-### Lives
-You start with **3 lives**. A hit triggers a 60-frame invincibility window (with a red blink effect) to prevent back-to-back damage.
-
-### Winning / Advancing
-There is no final "win" state — the game loops continuously, resetting the docks after each full cycle. The goal is to maximise your score across as many cycles as possible before running out of lives.
+### Scoring & Lives
+- **+10 points** for each server dock reached.
+- **+50 bonus points** when all five docks are filled in a single cycle.
+- **3 lives** per attempt. Collisions trigger a 60-frame invincibility window with a red flash effect before respawning.
+- The game runs continuously in an endless loop until all lives are depleted.
 
 ---
 
@@ -72,109 +71,97 @@ There is no final "win" state — the game loops continuously, resetting the doc
 
 ### Keyboard
 
-| Action | Keys |
-|--------|------|
-| Move Up | ↑ / W |
-| Move Down | ↓ / S |
-| Move Left | ← / A |
-| Move Right | → / D |
-| Pause / Resume | Space |
-| Start Game (from title/game over) | Space / ↑ / W |
+| Action | Primary Keys | Alternative Keys |
+|---|:---:|:---:|
+| Move Up | <kbd>↑</kbd> | <kbd>W</kbd> |
+| Move Down | <kbd>↓</kbd> | <kbd>S</kbd> |
+| Move Left | <kbd>←</kbd> | <kbd>A</kbd> |
+| Move Right | <kbd>→</kbd> | <kbd>D</kbd> |
+| Pause / Resume | <kbd>Space</kbd> | — |
+| Start Game *(from Idle / Game Over)* | <kbd>Space</kbd> | <kbd>↑</kbd> / <kbd>W</kbd> |
 
-### Mobile / Touch
+### Mobile & Touch
 
-An on-screen **D-pad** (▲ ▼ ◀ ▶) and a **Pause / Resume button** are rendered below the game canvas for touch play. All D-pad buttons use pointer events to ensure responsiveness on mobile browsers.
+An on-screen **D-pad** (▲ ▼ ◀ ▶) and a dedicated **Pause / Resume** button are rendered beneath the canvas, wired with responsive pointer event handlers for smooth touch play.
 
 ---
 
 ## ⚡ Difficulty Modes
 
-Difficulty can be selected before starting a game and controls two independent parameters:
+Difficulty must be selected prior to starting a round (locked during active play):
 
-| Mode | Vehicle Speed Multiplier | Spawn Interval Multiplier |
-|------|--------------------------|---------------------------|
-| **Easy** | 0.75x base speed | 3.0x interval (fewer, wider gaps) |
-| **Medium** | 0.85x base speed | 1.9x interval |
-| **Hard** | 1.0x base speed | 1.2x interval (more frequent, tighter gaps) |
+| Mode | Vehicle Speed Multiplier | Spawn Interval Multiplier | Gameplay Dynamics |
+|---|:---:|:---:|---|
+| **Easy** | 0.75x | 3.0x | Slower vehicle flow with generous spacing between hazards |
+| **Medium** | 0.85x | 1.9x | Standard arcade balance with moderate traffic frequency |
+| **Hard** | 1.0x | 1.2x | High-speed traffic with tight, rapid spawn intervals |
 
-A higher spawn interval multiplier means vehicles appear less frequently. At Hard difficulty, vehicles spawn nearly as often as the base lane configuration allows, leaving much smaller safe windows.
-
-Difficulty **cannot be changed mid-game** — the selector is disabled while a game is in progress or paused.
-
-Each difficulty mode maintains its **own separate leaderboard and high score** in `localStorage`.
+Each difficulty mode stores its own isolated leaderboard and personal high score.
 
 ---
 
-## 🏆 Scoring & Leaderboard
+## 🏆 Leaderboard
 
-### Scoring
-- Earn **10 points** per server dock filled.
-- Earn a **+50 bonus** when all five docks are filled in a single cycle.
-- If you land on a dock that is already filled, you lose a life and are respawned.
-
-### Leaderboard
-- The top **10 scores** for each difficulty mode are stored locally in `localStorage` under the key prefix `chc_leaderboard_`.
-- When you achieve a **new personal high score**, a name prompt appears on the Game Over screen. You can save your name or skip (saves as "Anonymous").
-- The leaderboard is displayed in the sidebar as **"Top Transmissions"**, showing rank, player name, and score.
-- Play counts and the last-played timestamp are also tracked per game mode.
+- **Browser-Local Storage**: All leaderboard records and statistics are saved locally via `localStorage` (prefixed with `chc_`). No remote servers or third-party trackers are used.
+- **Top Transmissions**: The sidebar displays the top 10 scores for the currently selected difficulty mode.
+- **Callsign Registration**: Setting a new personal high score prompts for your name on the Game Over screen (defaults to "Anonymous" if skipped).
+- **Mode Statistics**: Tracks lifetime play count and the last-played timestamp per difficulty.
 
 ---
 
 ## 🔊 Audio
 
-All audio is synthesised in real time using the **Web Audio API** — no audio files are bundled.
+All audio is synthesized dynamically in real time using the **Web Audio API** without loading external sound files:
 
-| Sound | Trigger |
-|-------|---------|
-| Background music (looping sequencer) | Plays during active gameplay |
-| Dock reached | Player successfully reaches a server dock |
-| All docks filled (fanfare) | Bonus round cycle complete |
-| Player hit | Collision with a vehicle or drowning |
-| Game over | All lives lost |
+| Sound / Track | Trigger Condition |
+|---|---|
+| **Background Music** | Looping 8-step chiptune synthesizer sequence active during gameplay |
+| **Dock Reached** | Successfully guiding the packet into an open server dock |
+| **Cycle Complete** | Harmonic fanfare triggered upon securing all five docks |
+| **Player Hit** | Collision with a highway vehicle or drowning in the digital river |
+| **Game Over** | Exhausting all three lives |
 
-- Audio can be **toggled on/off** at any time via the **Sound Enabled / Muted** button in the Game Options sidebar.
-- Background music stops automatically when the game is paused or ends.
+Sound can be silenced at any time using the **Mute** toggle button in the sidebar.
 
 ---
 
 ## 🛠️ Tech Stack
 
 | Technology | Purpose |
-|------------|---------|
-| [React 19](https://react.dev/) | UI components and game state management |
-| [TypeScript ~6](https://www.typescriptlang.org/) | Static typing across the entire codebase |
-| [Vite 8](https://vitejs.dev/) | Development server and production build tool |
-| [Tailwind CSS v4](https://tailwindcss.com/) | Utility-first styling via `@tailwindcss/vite` |
-| HTML5 Canvas API | Game rendering (480x480 px canvas) |
-| Web Audio API | Synthesised chiptune music and sound effects |
-| [Lucide React](https://lucide.dev/) | Icon set (Award, Play, Pause, Volume, Server, etc.) |
-| `localStorage` | Leaderboard and high score persistence, theme preference |
-| Google Fonts (Inter) | Typography |
+|---|---|
+| [React 19](https://react.dev/) | Component architecture, UI state, and lifecycle management |
+| [TypeScript ~6](https://www.typescriptlang.org/) | Type safety across game configuration, storage, and entity states |
+| [Vite 8](https://vitejs.dev/) | Fast development server and optimized production bundler |
+| [Tailwind CSS v4](https://tailwindcss.com/) | Modern styling via `@tailwindcss/vite` |
+| HTML5 Canvas API | Hardware-accelerated 2D game rendering at 60 FPS |
+| Web Audio API | Real-time synthesized chiptune music and sound effect generation |
+| [Lucide React](https://lucide.dev/) | Clean iconography for controls, game options, and statistics |
+| `localStorage` | Client-side persistence for leaderboards, high scores, and theme settings |
 
 ---
 
 ## 📁 Project Structure
 
-```
+```text
 cyber-highway-crosser/
-├── index.html                  # Entry point and meta tags
-├── package.json                # Dependencies and scripts
-├── vite.config.ts              # Vite + React + Tailwind CSS v4 config
-├── tsconfig.json               # TypeScript project references
-├── tsconfig.app.json           # App-level TS compiler options
+├── index.html                   # HTML entry point and font declarations
+├── package.json                 # Project dependencies, scripts, and metadata
+├── vite.config.ts               # Vite configuration (React & Tailwind CSS v4)
+├── tsconfig.json                # TypeScript project references
+├── tsconfig.app.json            # Application TypeScript configuration
 └── src/
-    ├── main.tsx                # React root — mounts ThemeProvider + App
-    ├── index.css               # Global baseline styles
-    ├── App.tsx                 # App shell: header, theme toggle, game mount
+    ├── main.tsx                 # React root mounting ThemeProvider and App
+    ├── index.css                # Base stylesheet and Tailwind CSS v4 directive
+    ├── App.tsx                  # App layout: navigation header, theme toggle, and canvas frame
     ├── context/
-    │   └── ThemeContext.tsx    # Dark/light theme context + localStorage persistence
+    │   └── ThemeContext.tsx     # Dark/light theme provider with localStorage sync
     ├── core/
-    │   ├── types.ts            # Shared TypeScript interfaces (ScoreEntry, GameStats)
-    │   ├── storage.ts          # localStorage wrapper: leaderboard, high score, play count
-    │   └── audio.ts            # Web Audio API AudioManager (BGM sequencer + SFX)
+    │   ├── types.ts             # TypeScript interfaces for score entries and statistics
+    │   ├── storage.ts           # localStorage service for leaderboards and metrics
+    │   └── audio.ts             # Web Audio API engine (BGM sequencer and SFX synthesizers)
     └── game/
-        ├── highway-crosser.config.ts   # All game constants, lane configs, difficulty tables
-        └── HighwayCrosser.tsx          # Main game component: canvas loop, collision, UI
+        ├── highway-crosser.config.ts # Core game constants, lane configs, and difficulty curves
+        └── HighwayCrosser.tsx   # Primary game loop, canvas drawing, collision checks, and UI
 ```
 
 ---
@@ -183,16 +170,21 @@ cyber-highway-crosser/
 
 ### Prerequisites
 
-- [Node.js](https://nodejs.org/) (v18 or later recommended)
-- npm (included with Node.js)
+- [Node.js](https://nodejs.org/) (v18 or higher recommended)
+- `npm` (bundled with Node.js)
 
-### Install dependencies
+### Installation
 
 ```bash
+# Clone repository
+git clone https://github.com/NRR385/Cyber-Highway-Crosser.git
+cd Cyber-Highway-Crosser
+
+# Install dependencies
 npm install
 ```
 
-### Run the development server
+### Development
 
 ```bash
 npm run dev
@@ -200,46 +192,55 @@ npm run dev
 
 Open [http://localhost:5173](http://localhost:5173) in your browser.
 
-### Build for production
+### Build & Preview
 
 ```bash
+# Type-check and build for production
 npm run build
-```
 
-### Preview the production build locally
-
-```bash
+# Preview production build locally
 npm run preview
-```
-
-### Lint
-
-```bash
-npm run lint
 ```
 
 ---
 
 ## 🌍 Open Source Contribution
 
-This project was originally developed as an **open-source contribution** to
-[QuickPlayZone](https://github.com/shamilahmdt/quickplay-zone).
+Cyber Highway Crosser was originally developed as an open-source contribution
+to [QuickPlayZone](https://github.com/shamilahmdt/quickplay-zone).
 
-The game was contributed through merged pull requests and later maintained
-as a standalone repository for continued development and experimentation.
+- 🎮 Game contribution — [PR #53](https://github.com/shamilahmdt/quickplay-zone/pull/53)
+- 📝 README contribution — [PR #54](https://github.com/shamilahmdt/quickplay-zone/pull/54)
 
-### Contribution
+Both pull requests were authored by [NRR385](https://github.com/NRR385)
+and merged into QuickPlayZone's `main` branch.
 
-- 🎮 Built **Cyber Highway Crosser** as a playable web game
-- 🔀 Contributed the game to QuickPlayZone
-- 📝 Added the game to the project's README
-- 🤝 Collaborated through GitHub pull requests and code review
+This repository is the standalone version of the game for continued
+development and future contributions.
+
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome! Check out the [Issues](https://github.com/NRR385/Cyber-Highway-Crosser/issues) page to find open tasks or propose new features.
+
+
+### Quick Contribution Flow
+
+1. Fork the repository and clone your fork locally.
+2. Create a dedicated branch (`git checkout -b feature/your-feature-name`).
+3. Make your changes and verify the build passes (`npm run build`).
+4. Commit changes with descriptive messages and push to your fork.
+5. Open a Pull Request targeting `main`.
+
+For in-depth development setup, branch conventions, and PR guidelines, please see [CONTRIBUTING.md](CONTRIBUTING.md). For larger architectural changes, please open an issue first to discuss the design.
 
 ---
 
 ## 📄 License
 
-This project is licensed under the **MIT License**.
+This project is licensed under the MIT License.
 
 See the [LICENSE](LICENSE) file for the full license text.
 
@@ -249,15 +250,12 @@ See the [LICENSE](LICENSE) file for the full license text.
 
 **NRR385** — Developer & contributor of Cyber Highway Crosser
 
-- GitHub: [github.com/NRR385](https://github.com/NRR385)
-- Contribution: [quickplay-zone/pull/53](https://github.com/shamilahmdt/quickplay-zone/pull/53)
-
-> This repository is my standalone version of the game I developed as an open-source contribution to QuickPlayZone. I am not the maintainer or owner of the QuickPlayZone project.
+- GitHub: [@NRR385](https://github.com/NRR385)
 
 ---
 
 ## ⭐ Give It a Try
 
-Clone the repo, run `npm install && npm run dev`, and try to fill all five server docks before the neon traffic claims your last life.
+Clone the repo, run `npm run dev`, and see how many server cycles you can conquer!
 
-If you find this useful or interesting, feel free to ⭐ the repo or explore the [original QuickPlayZone project](https://github.com/shamilahmdt/quickplay-zone) — it's a great open-source collection worth checking out.
+If you find this project fun or useful, please consider giving it a ⭐ on GitHub
