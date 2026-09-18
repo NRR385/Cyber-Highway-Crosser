@@ -7,14 +7,14 @@ export type Difficulty = 'EASY' | 'MEDIUM' | 'HARD';
 export const DIFFICULTY_SPEEDS: Record<Difficulty, number> = {
   EASY: 0.75,
   MEDIUM: 0.85,
-  HARD: 1.0,
+  HARD: 0.9,
 };
 
 /** Multiplier applied to lane spawn intervals (>1.0 = fewer vehicles & larger gaps, <1.0 = more vehicles & tighter gaps). */
 export const DIFFICULTY_SPAWN_INTERVALS: Record<Difficulty, number> = {
-  EASY: 3.0,
-  MEDIUM: 1.9,
-  HARD: 1.2,
+  EASY: 2.4,
+  MEDIUM: 1.8,
+  HARD: 1.4,
 };
 
 /** Per-lane descriptor used to spawn and move vehicles / platforms. */
