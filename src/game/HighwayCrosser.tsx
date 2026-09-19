@@ -107,6 +107,7 @@ export const HighwayCrosser: FC = () => {
   const [gameStatus, setGameStatus] = useState<
     'IDLE' | 'PLAYING' | 'PAUSED' | 'GAME_OVER'
   >('IDLE');
+  const [uiState, setUiState] = useState<'MENU' | 'BRIEFING' | 'DEPLOYING' | 'GAME'>('MENU');
   const [muted, setMuted] = useState(audio.getMuted());
   const [leaderboard, setLeaderboard] = useState(
     () => storage.getLeaderboard(`${GAME_ID}_medium`),
@@ -243,15 +244,15 @@ export const HighwayCrosser: FC = () => {
 
       // Start from idle / game-over
       if (gameStatus === 'IDLE' || gameStatus === 'GAME_OVER') {
-        if (['Space', 'ArrowUp', 'KeyW'].includes(e.code)) resetGame();
+        if (['Space', 'ArrowUp', 'KeyW'].includes(e.code) && uiState === 'GAME') resetGame();
         return;
       }
       // Resume from pause
       if (gameStatus === 'PAUSED') {
-        if (e.code === 'Space') setGameStatus('PLAYING');
+        if (e.code === 'Space' && uiState === 'GAME') setGameStatus('PLAYING');
         return;
       }
-      if (gameStatus !== 'PLAYING') return;
+      if (gameStatus !== 'PLAYING' || uiState !== 'GAME') return;
 
       // Pause
       if (e.code === 'Space') { setGameStatus('PAUSED'); return; }
@@ -703,398 +704,323 @@ export const HighwayCrosser: FC = () => {
       : 'bg-white border-slate-200 text-slate-600 active:bg-slate-900 active:text-white'
     }`;
 
+  // ── Flow Actions ─────────────────────────────────────────────────────────
+  const startBriefing = () => setUiState('BRIEFING');
+
+  const deployGame = () => {
+    setUiState('DEPLOYING');
+    setTimeout(() => {
+      resetGame();
+      setUiState('GAME');
+    }, 1200);
+  };
+
+  const returnToMenu = () => {
+    quitGame();
+    setUiState('MENU');
+  };
+
   // ── JSX ───────────────────────────────────────────────────────────────────
   return (
-    <div className="flex flex-col lg:flex-row gap-8 w-full max-w-5xl mx-auto px-4 py-6 lg:py-8">
+    <div className="w-full h-full relative overflow-x-hidden overflow-y-auto">
 
-      {/* ══ Left column: game board ══════════════════════════════════════════ */}
-      <div className="flex-1 flex flex-col items-center">
+      {/* ══ STAGE 1: MAIN MENU ═════════════════════════════════════════════ */}
+      {uiState === 'MENU' && (
+        <div className="absolute inset-0 z-30 flex flex-col items-center justify-center p-6 bg-[#09090b]/95 backdrop-blur-sm animate-[fade-in_0.3s_ease-out]">
+          <div className="max-w-md w-full flex flex-col gap-8 text-center">
+            <div>
+              <Server className="w-20 h-20 mx-auto mb-6 text-cyan-500 drop-shadow-[0_0_20px_rgba(6,182,212,0.6)] animate-pulse" />
+              <h1 className="text-4xl sm:text-5xl font-black uppercase tracking-[0.15em] text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.4)] mb-4 leading-tight">
+                Cyber Highway <br /> Crosser
+              </h1>
+              <p className="text-slate-400 text-sm max-w-sm mx-auto tracking-wide">
+                Guide your data packet through hostile traffic and reach all five server docks.
+              </p>
+            </div>
 
-        {/* Stats hub */}
-        <div className={`flex justify-between items-center w-full max-w-[480px] mb-4 border p-4 rounded-[4px] ${dark ? 'bg-[#1a1a1c] border-slate-800' : 'bg-white border-slate-200'
-          }`}>
-          {/* Lives */}
-          <div>
-            <div className={`text-xs font-semibold mb-1 ${dark ? 'text-slate-500' : 'text-slate-500'}`}>
-              Lives
-            </div>
-            <div className="flex gap-1.5">
-              {Array.from({ length: LIVES }).map((_, i) => (
-                <div
-                  key={i}
-                  className={`w-4 h-2.5 rounded-sm transition-colors ${i < lives
-                      ? 'bg-cyan-500 shadow-[0_0_8px_rgba(6,182,212,0.6)]'
-                      : 'bg-transparent border border-slate-700'
-                    }`}
-                />
-              ))}
-            </div>
+            <button
+              onClick={startBriefing}
+              className="w-full py-5 text-xl font-black uppercase tracking-[0.2em] bg-cyan-500 hover:bg-cyan-400 text-[#09090b] transition-all rounded-[2px] shadow-[0_0_25px_rgba(6,182,212,0.4)] hover:shadow-[0_0_40px_rgba(6,182,212,0.7)] cursor-pointer mt-4"
+            >
+              Start Game
+            </button>
           </div>
+        </div>
+      )}
 
-          {/* Score */}
-          <div className="text-center">
-            <div className={`text-xs font-semibold mb-0.5 ${dark ? 'text-slate-500' : 'text-slate-500'}`}>
-              Score
-            </div>
-            <div className={`text-xl font-bold font-mono ${dark ? 'text-white' : 'text-slate-900'}`}>
-              {score}
-            </div>
-          </div>
+      {/* ══ STAGE 2: MISSION BRIEFING ════════════════════════════════════════ */}
+      {uiState === 'BRIEFING' && (
+        <div className="absolute inset-0 z-30 flex flex-col items-center justify-center p-6 bg-[#09090b]/95 backdrop-blur-sm animate-[fade-in_0.3s_ease-out]">
+          <div className="max-w-lg w-full bg-[#121214] border border-cyan-500/30 rounded-[4px] p-8 shadow-[0_0_30px_rgba(6,182,212,0.1)] relative overflow-hidden">
+            {/* Scanline overlay */}
+            <div className="absolute inset-0 pointer-events-none bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[length:100%_4px,3px_100%] z-10 opacity-20"></div>
 
-          {/* High score */}
-          <div className="text-right">
-            <div className={`text-xs font-semibold mb-0.5 flex items-center justify-end gap-1 ${dark ? 'text-slate-500' : 'text-slate-500'
-              }`}>
-              <Award className="w-3.5 h-3.5" /> Best
-            </div>
-            <div className={`text-xl font-bold font-mono ${dark ? 'text-white' : 'text-slate-900'}`}>
-              {highScore}
+            <div className="relative z-20">
+              <div className="text-cyan-500 font-mono text-xs mb-6 flex justify-between border-b border-cyan-500/30 pb-2">
+                <span>SYSTEM.TERMINAL.v9.4</span>
+                <span className="animate-pulse">_</span>
+              </div>
+
+              <h2 className="text-2xl font-black text-white uppercase tracking-widest mb-6 drop-shadow-[0_0_10px_rgba(255,255,255,0.2)]">Mission Briefing</h2>
+
+              <div className="space-y-4 font-mono text-sm text-slate-300 mb-8">
+                <p><span className="text-cyan-500 font-bold">OBJECTIVE:</span> Guide data packet through hostile traffic.</p>
+                <p><span className="text-cyan-500 font-bold">TARGET:</span> Reach all five server docks.</p>
+                <p><span className="text-amber-500 font-bold">WARNING:</span> Returning to the same server dock costs 1 integrity and resets your progress.</p>
+
+                <div className="pt-2 pb-2">
+                  <p className="text-cyan-500 font-bold mb-2">THREAT LEVEL / DIFFICULTY:</p>
+                  <div className="flex gap-2">
+                    {(['EASY', 'MEDIUM', 'HARD'] as const).map((diff) => (
+                      <button
+                        key={diff}
+                        onClick={() => handleDifficultyChange(diff)}
+                        className={`flex-1 py-2 text-xs font-bold rounded-[2px] border transition-colors cursor-pointer ${difficulty === diff
+                          ? 'bg-cyan-500/20 text-cyan-400 border-cyan-500/60 shadow-[inset_0_0_10px_rgba(6,182,212,0.2)]'
+                          : 'bg-black/60 text-slate-500 border-slate-700 hover:border-slate-500 hover:text-slate-300'
+                          }`}
+                      >
+                        [ {diff} ]
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <p><span className="text-cyan-500 font-bold">INTEGRITY:</span> {LIVES} ATTEMPTS REMAINING</p>
+              </div>
+
+              <div className="flex gap-4 mt-8">
+                <button
+                  onClick={() => setUiState('MENU')}
+                  className="px-6 py-3 border border-slate-700 text-slate-400 hover:text-white hover:border-slate-500 font-bold uppercase tracking-widest text-xs transition-colors rounded-[2px] cursor-pointer"
+                >
+                  [ ABORT ]
+                </button>
+                <button
+                  onClick={deployGame}
+                  className="flex-1 px-6 py-3 bg-cyan-500 hover:bg-cyan-400 text-[#09090b] font-black uppercase tracking-widest text-xs transition-colors rounded-[2px] shadow-[0_0_15px_rgba(6,182,212,0.3)] hover:shadow-[0_0_25px_rgba(6,182,212,0.5)] cursor-pointer"
+                >
+                  Deploy Packet
+                </button>
+              </div>
             </div>
           </div>
         </div>
+      )}
 
-        {/* Canvas + overlays */}
-        <div className="w-full max-w-[480px] flex flex-col items-center">
-          <div
-            className={`relative border rounded-[4px] overflow-hidden w-full ${dark ? 'bg-[#09090b] border-slate-800' : 'bg-slate-50 border-slate-200'
-              }`}
-            style={{ touchAction: 'none' }}
-          >
-            <canvas
-              ref={canvasRef}
-              width={CANVAS_W}
-              height={CANVAS_H}
-              className="block w-full aspect-square"
-            />
+      {/* ══ STAGE 3: DEPLOYMENT TRANSITION ═══════════════════════════════════ */}
+      {uiState === 'DEPLOYING' && (
+        <div className="absolute inset-0 z-40 flex flex-col items-center justify-center p-6 bg-[#09090b]">
+          <div className="font-mono text-cyan-500 text-lg sm:text-xl flex flex-col gap-3 items-start deployment-text">
+            <div className="animate-[fade-in_0.1s_forwards]">ESTABLISHING CONNECTION...</div>
+            <div className="animate-[fade-in_0.1s_0.4s_forwards] opacity-0">ROUTING DATA PACKET...</div>
+            <div className="animate-[fade-in_0.1s_0.8s_forwards] opacity-0 text-white font-bold drop-shadow-[0_0_10px_rgba(255,255,255,0.5)]">SERVER NETWORK ONLINE.</div>
+          </div>
+        </div>
+      )}
 
-            {/* IDLE overlay */}
-            {gameStatus === 'IDLE' && (
-              <div className={`absolute inset-0 flex flex-col items-center justify-center p-6 text-center z-20 ${dark ? 'bg-[#121214]/95' : 'bg-white/95'
-                }`}>
-                <Server className={`w-12 h-12 mb-3 animate-pulse ${dark ? 'text-cyan-400' : 'text-cyan-600'
-                  }`} />
-                <h3 className={`text-base font-bold mb-2 uppercase tracking-wider ${dark ? 'text-white' : 'text-slate-900'
-                  }`}>
-                  Cyber Highway Crosser
+      {/* ══ STAGE 4: MAIN GAME ═══════════════════════════════════════════════ */}
+      {uiState === 'GAME' && (
+        <div className="w-full min-h-full flex flex-col items-center justify-center py-8 sm:py-10 px-4 animate-[fade-in_0.5s_ease-out]">
+
+          {/* Centered Desktop Grid Workspace */}
+          <div className="w-full max-w-[1160px] mx-auto grid grid-cols-1 lg:grid-cols-[minmax(220px,280px)_minmax(0,560px)_minmax(220px,280px)] gap-8 lg:gap-10 justify-center items-center">
+
+            {/* LEFT PANEL (Difficulty & Options) */}
+            <div className="w-full flex flex-col gap-8 order-4 lg:order-1 self-center">
+              {/* Difficulty */}
+              <div className="bg-[#121214] border border-slate-800 rounded-[4px] p-6 shadow-xl">
+                <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-slate-500 mb-4 flex items-center gap-2">
+                  Threat Level
                 </h3>
-                <p className={`text-xs mb-6 max-w-[260px] ${dark ? 'text-slate-400' : 'text-slate-500'
-                  }`}>
-                  Guide your data packet through neon traffic and river platforms.
-                  Reach all five server docks to advance!
-                </p>
-                <button
-                  onClick={resetGame}
-                  className={`flex items-center justify-center gap-2 font-bold px-6 py-2.5
-                    rounded-[4px] border transition-colors uppercase tracking-wider
-                    text-xs cursor-pointer w-full max-w-xs ${dark
-                      ? 'bg-white text-black border-white hover:bg-transparent hover:text-white'
-                      : 'bg-slate-900 text-white border-slate-900 hover:bg-transparent hover:text-slate-900'
-                    }`}
-                >
-                  <Play className="w-3.5 h-3.5 fill-current" /> Start Game
-                </button>
+                <div className="flex flex-col gap-3">
+                  {(['EASY', 'MEDIUM', 'HARD'] as const).map((diff) => (
+                    <button
+                      key={diff}
+                      onClick={() => handleDifficultyChange(diff)}
+                      disabled={gameStatus === 'PLAYING' || gameStatus === 'PAUSED'}
+                      className={`py-3 text-sm font-bold rounded-[2px] border transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed tracking-widest ${difficulty === diff
+                        ? 'bg-cyan-500/15 text-cyan-400 border-cyan-500/50 shadow-[inset_0_0_15px_rgba(6,182,212,0.15)]'
+                        : 'bg-black/40 text-slate-500 border-slate-800 hover:border-slate-600 hover:text-slate-300'
+                        }`}
+                    >
+                      {diff}
+                    </button>
+                  ))}
+                </div>
               </div>
-            )}
 
-            {/* PAUSED overlay */}
-            {gameStatus === 'PAUSED' && (
-              <div className={`absolute inset-0 flex flex-col items-center justify-center p-6 gap-4 z-20 ${dark ? 'bg-[#121214]/95' : 'bg-white/95'
-                }`}>
-                <h3 className={`text-lg font-bold uppercase tracking-wider ${dark ? 'text-white' : 'text-slate-900'
-                  }`}>
-                  Game Paused
+              {/* Options */}
+              <div className="bg-[#121214] border border-slate-800 rounded-[4px] p-6 shadow-xl flex flex-col gap-5">
+                <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-slate-500 flex items-center gap-2">
+                  System Options
                 </h3>
-                <div className="flex gap-3">
+                <button
+                  onClick={() => { const m = audio.toggleMute(); setMuted(m); }}
+                  className="w-full py-3.5 flex items-center justify-center gap-2 border border-slate-800 bg-black/40 hover:border-slate-600 hover:text-slate-300 text-slate-400 rounded-[2px] transition-colors cursor-pointer text-sm font-bold tracking-widest"
+                >
+                  {muted ? <><VolumeX className="w-4 h-4 text-red-500" /> Audio Muted</> : <><Volume2 className="w-4 h-4 text-emerald-500" /> Audio Enabled</>}
+                </button>
+
+                <div className="hidden lg:block pt-5 border-t border-slate-800/50">
+                  <h4 className="text-xs font-bold uppercase tracking-[0.2em] text-slate-600 mb-3">Controls</h4>
+                  <div className="flex flex-col gap-2 text-xs text-slate-500 font-mono">
+                    <div className="flex justify-between"><span>[W, A, S, D]</span> <span>MOVE</span></div>
+                    <div className="flex justify-between"><span>[UP, DOWN, LEFT, RIGHT ARROWS]</span> <span>MOVE</span></div>
+                    <div className="flex justify-between"><span>[SPACE]</span> <span>PAUSE</span></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* CENTER PANEL (Game Board & HUD) */}
+            <div className="w-full flex flex-col items-center order-1 lg:order-2 self-center mx-auto" style={{ maxWidth: '560px' }}>
+
+              {/* HUD */}
+              <div className="w-full flex justify-between items-end mb-4 px-2">
+                <div className="flex gap-6 sm:gap-8">
+                  <div>
+                    <div className="text-xs font-bold uppercase tracking-widest text-cyan-500/70 mb-2">Integrity</div>
+                    <div className="flex gap-2">
+                      {Array.from({ length: LIVES }).map((_, i) => (
+                        <div key={i} className={`w-4 h-2.5 rounded-[1px] transition-colors ${i < lives ? 'bg-cyan-500 shadow-[0_0_8px_rgba(6,182,212,0.6)]' : 'bg-slate-800/80 border border-slate-700/50'}`} />
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-xs font-bold uppercase tracking-widest text-cyan-500/70 mb-1">Score</div>
+                    <div className="text-2xl sm:text-3xl font-black font-mono text-white leading-none drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]">{score}</div>
+                  </div>
+                </div>
+
+                <div className="flex items-end gap-5 sm:gap-8">
+                  <div className="text-right hidden sm:block">
+                    <div className="text-xs font-bold uppercase tracking-widest text-cyan-500/70 mb-1 flex items-center justify-end gap-1">
+                      Record
+                    </div>
+                    <div className="text-2xl sm:text-3xl font-black font-mono text-slate-300 leading-none">{highScore}</div>
+                  </div>
+
                   <button
-                    onClick={() => setGameStatus('PLAYING')}
-                    className={`flex items-center gap-2 font-bold px-5 py-2.5 rounded-[4px]
-                      border transition-colors uppercase tracking-wider text-xs cursor-pointer ${dark
-                        ? 'bg-white text-black border-white hover:bg-transparent hover:text-white'
-                        : 'bg-slate-900 text-white border-slate-900 hover:bg-transparent hover:text-slate-900'
-                      }`}
+                    onClick={() => setGameStatus(prev => prev === 'PLAYING' ? 'PAUSED' : 'PLAYING')}
+                    className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-[#121214] border border-slate-700 flex items-center justify-center text-slate-400 hover:text-white hover:border-cyan-500 hover:shadow-[0_0_15px_rgba(6,182,212,0.3)] transition-all cursor-pointer"
+                    aria-label="Pause Menu"
                   >
-                    <Play className="w-3.5 h-3.5 fill-current" /> Resume
-                  </button>
-                  <button
-                    onClick={quitGame}
-                    className={`flex items-center gap-2 font-bold px-5 py-2.5 rounded-[4px]
-                      border transition-colors uppercase tracking-wider text-xs cursor-pointer ${dark
-                        ? 'bg-[#1a1a1c] text-slate-400 border-slate-800 hover:border-slate-500 hover:text-white'
-                        : 'bg-slate-100 text-slate-600 border-slate-200 hover:border-slate-400 hover:text-slate-900'
-                      }`}
-                  >
-                    <RotateCcw className="w-3.5 h-3.5" /> Abort
+                    {gameStatus === 'PLAYING' ? <Pause className="w-5 h-5 sm:w-6 sm:h-6" /> : <Play className="w-5 h-5 sm:w-6 sm:h-6" />}
                   </button>
                 </div>
               </div>
-            )}
 
-            {/* GAME_OVER overlay */}
-            {gameStatus === 'GAME_OVER' && (
-              <div className={`absolute inset-0 flex flex-col items-center justify-center p-6 text-center z-20 ${dark ? 'bg-[#121214]/95' : 'bg-white/95'
-                }`}>
-                <h3 className="text-lg font-bold text-red-500 mb-2 uppercase tracking-wider">
-                  Packet Lost
-                </h3>
-                <p className={`mb-4 font-medium ${dark ? 'text-slate-400' : 'text-slate-600'}`}>
-                  Final Score:{' '}
-                  <span className={dark ? 'text-white' : 'text-slate-900'}>{score}</span>
-                </p>
+              {/* Game Canvas Container */}
+              <div className="w-full relative border border-slate-700/80 rounded-[4px] overflow-hidden bg-[#09090b] shadow-[0_0_60px_rgba(0,0,0,0.6)] ring-1 ring-cyan-500/10" style={{ touchAction: 'none' }}>
+                <canvas
+                  ref={canvasRef}
+                  width={CANVAS_W}
+                  height={CANVAS_H}
+                  className="block w-full aspect-square"
+                />
 
-                {showNamePrompt ? (
-                  <div className="w-full max-w-xs flex flex-col gap-3">
-                    <div className={`text-[10px] font-bold uppercase tracking-wider ${dark ? 'text-slate-400' : 'text-slate-500'
-                      }`}>
-                      New High Score! Enter Name
-                    </div>
-                    <input
-                      type="text"
-                      maxLength={15}
-                      placeholder="Your name"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      onKeyDown={(e) => { if (e.key === 'Enter') handleSaveScore(); }}
-                      className={`w-full rounded-[4px] px-3 py-2 text-center text-base
-                        font-medium focus:outline-none transition-colors border ${dark
-                          ? 'bg-[#1a1a1c] border-slate-800 text-[#e8e8ea] placeholder-slate-600 focus:border-white'
-                          : 'bg-white border-slate-200 text-slate-900 placeholder-slate-400 focus:border-slate-900'
-                        }`}
-                    />
-                    <div className="flex gap-2 w-full">
+                {/* GAME STATE OVERLAYS */}
+                {gameStatus === 'PAUSED' && (
+                  <div className="absolute inset-0 z-20 flex flex-col items-center justify-center p-8 bg-[#09090b]/85 backdrop-blur-sm animate-[fade-in_0.2s_ease-out]">
+                    <h3 className="text-3xl font-black uppercase tracking-[0.2em] text-white mb-10 drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">Paused</h3>
+                    <div className="flex flex-col gap-5 w-64">
                       <button
-                        onClick={handleSaveScore}
-                        className={`flex-1 font-bold py-2 rounded-[4px] border transition-colors
-                          text-xs uppercase tracking-wider cursor-pointer ${dark
-                            ? 'bg-white text-black border-white hover:bg-transparent hover:text-white'
-                            : 'bg-slate-900 text-white border-slate-900 hover:bg-transparent hover:text-slate-900'
-                          }`}
+                        onClick={() => setGameStatus('PLAYING')}
+                        className="w-full py-4 bg-cyan-500 hover:bg-cyan-400 text-[#09090b] font-black uppercase tracking-widest text-sm rounded-[2px] shadow-[0_0_20px_rgba(6,182,212,0.3)] cursor-pointer transition-colors"
                       >
-                        Save
+                        Resume
                       </button>
                       <button
-                        onClick={handleSkipSaveScore}
-                        className={`flex-1 font-bold py-2 rounded-[4px] border transition-colors
-                          text-xs uppercase tracking-wider cursor-pointer ${dark
-                            ? 'bg-[#1a1a1c] text-slate-400 border-slate-800 hover:border-slate-500 hover:text-white'
-                            : 'bg-slate-100 text-slate-600 border-slate-200 hover:border-slate-400 hover:text-slate-900'
-                          }`}
+                        onClick={returnToMenu}
+                        className="w-full py-4 border border-slate-700 bg-black/40 text-slate-400 hover:text-white hover:border-slate-500 font-bold uppercase tracking-widest text-sm rounded-[2px] cursor-pointer transition-colors"
                       >
-                        Skip
+                        Abort Mission
                       </button>
                     </div>
                   </div>
-                ) : (
-                  <button
-                    onClick={resetGame}
-                    className={`flex items-center gap-2 font-bold px-6 py-2.5 rounded-[4px]
-                      border transition-colors uppercase tracking-wider text-xs cursor-pointer ${dark
-                        ? 'bg-white text-black border-white hover:bg-transparent hover:text-white'
-                        : 'bg-slate-900 text-white border-slate-900 hover:bg-transparent hover:text-slate-900'
-                      }`}
-                  >
-                    <RotateCcw className="w-3.5 h-3.5" /> Play Again
-                  </button>
+                )}
+
+                {gameStatus === 'GAME_OVER' && (
+                  <div className="absolute inset-0 z-20 flex flex-col items-center justify-center p-8 bg-[#09090b]/90 backdrop-blur-md animate-[fade-in_0.2s_ease-out]">
+                    <h3 className="text-4xl font-black uppercase tracking-[0.15em] text-red-500 mb-4 drop-shadow-[0_0_20px_rgba(239,68,68,0.6)]">Packet Lost</h3>
+                    <p className="text-slate-300 mb-10 font-mono text-base">Final Score: <span className="text-white font-bold">{score}</span></p>
+
+                    {showNamePrompt ? (
+                      <div className="w-full max-w-sm flex flex-col gap-5">
+                        <div className="text-sm font-bold text-cyan-400 uppercase tracking-[0.15em] text-center animate-pulse">New High Score!</div>
+                        <input
+                          type="text"
+                          maxLength={15}
+                          placeholder="ENTER DESIGNATION"
+                          value={name}
+                          onChange={(e) => setName(e.target.value)}
+                          onKeyDown={(e) => { if (e.key === 'Enter') handleSaveScore(); }}
+                          className="w-full bg-[#121214] border border-cyan-500/50 rounded-[2px] px-5 py-4 text-center text-base font-mono text-white placeholder-slate-600 focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 shadow-[inset_0_0_15px_rgba(0,0,0,0.5)]"
+                          autoFocus
+                        />
+                        <div className="flex gap-4 w-full">
+                          <button onClick={handleSaveScore} className="flex-1 py-4 bg-cyan-500 hover:bg-cyan-400 text-[#09090b] font-black uppercase tracking-widest text-sm rounded-[2px] shadow-[0_0_20px_rgba(6,182,212,0.3)] cursor-pointer transition-colors">Save</button>
+                          <button onClick={handleSkipSaveScore} className="flex-1 py-4 border border-slate-700 bg-black/40 text-slate-400 hover:text-white hover:border-slate-500 font-bold uppercase tracking-widest text-sm rounded-[2px] cursor-pointer transition-colors">Skip</button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col gap-5 w-64 mt-4">
+                        <button onClick={resetGame} className="w-full py-4 bg-cyan-500 hover:bg-cyan-400 text-[#09090b] font-black uppercase tracking-widest text-sm rounded-[2px] shadow-[0_0_20px_rgba(6,182,212,0.3)] cursor-pointer transition-colors">Deploy Again</button>
+                        <button onClick={returnToMenu} className="w-full py-4 border border-slate-700 bg-black/40 text-slate-400 hover:text-white hover:border-slate-500 font-bold uppercase tracking-widest text-sm rounded-[2px] cursor-pointer transition-colors">Main Menu</button>
+                      </div>
+                    )}
+                  </div>
                 )}
               </div>
-            )}
-          </div>
-
-          {/* ── Mobile D-pad controls ─────────────────────────────────────── */}
-          <div className="mt-6 flex flex-col items-center gap-1.5 w-full">
-            {/* Up row */}
-            <div className="flex gap-1.5 justify-center">
-              <div className="w-12 h-12" aria-hidden />
-              <button
-                onPointerDown={(e) => { e.preventDefault(); dpadMove('UP'); }}
-                disabled={notPlaying}
-                className={dpadBtnStyle}
-              >
-                ▲
-              </button>
-              <div className="w-12 h-12" aria-hidden />
             </div>
-            {/* Left / Down / Right row */}
-            <div className="flex gap-1.5 justify-center">
-              <button
-                onPointerDown={(e) => { e.preventDefault(); dpadMove('LEFT'); }}
-                disabled={notPlaying}
-                className={dpadBtnStyle}
-              >
-                ◀
-              </button>
-              <button
-                onPointerDown={(e) => { e.preventDefault(); dpadMove('DOWN'); }}
-                disabled={notPlaying}
-                className={dpadBtnStyle}
-              >
-                ▼
-              </button>
-              <button
-                onPointerDown={(e) => { e.preventDefault(); dpadMove('RIGHT'); }}
-                disabled={notPlaying}
-                className={dpadBtnStyle}
-              >
-                ▶
-              </button>
-            </div>
-            {/* Pause / Resume button */}
-            <button
-              onClick={() => {
-                if (gameStatus === 'PLAYING') setGameStatus('PAUSED');
-                else if (gameStatus === 'PAUSED') setGameStatus('PLAYING');
-              }}
-              disabled={gameStatus === 'IDLE' || gameStatus === 'GAME_OVER'}
-              className={`mt-2 w-40 h-10 rounded-[4px] border flex items-center justify-center
-                gap-2 font-bold select-none cursor-pointer transition-colors uppercase
-                tracking-wider text-xs disabled:opacity-40 disabled:cursor-not-allowed ${dark
-                  ? 'bg-[#1a1a1c] border-slate-800 text-slate-300 active:bg-white active:text-black'
-                  : 'bg-white border-slate-200 text-slate-600 active:bg-slate-900 active:text-white'
-                }`}
-            >
-              {gameStatus === 'PLAYING'
-                ? <><Pause className="w-4 h-4" /> Pause</>
-                : <><Play className="w-4 h-4" /> Resume</>
-              }
-            </button>
-          </div>
-        </div>
-      </div>
 
-      {/* ══ Right column: sidebar ══════════════════════════════════════════ */}
-      <div className="w-full lg:w-80 flex flex-col gap-6">
-
-        {/* Game Options */}
-        <div className={`rounded-[4px] p-6 border flex flex-col gap-4 ${dark ? 'bg-[#1a1a1c] border-slate-800' : 'bg-white border-slate-200'
-          }`}>
-          <h3 className={`text-xs font-bold uppercase tracking-wider ${dark ? 'text-[#e8e8ea]' : 'text-slate-800'
-            }`}>
-            Game Options
-          </h3>
-
-          {/* Difficulty Selector */}
-          <div>
-            <div className={`text-[10px] font-bold uppercase tracking-wider mb-2 ${dark ? 'text-slate-400' : 'text-slate-500'
-              }`}>
-              Speed / Difficulty
-            </div>
-            <div className="flex gap-1.5">
-              {(['EASY', 'MEDIUM', 'HARD'] as const).map((diff) => (
-                <button
-                  key={diff}
-                  type="button"
-                  onClick={() => handleDifficultyChange(diff)}
-                  disabled={gameStatus === 'PLAYING' || gameStatus === 'PAUSED'}
-                  className={`flex-1 py-1.5 rounded-[4px] border text-[9px] font-bold transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed ${difficulty === diff
-                      ? dark
-                        ? 'bg-white text-black border-white'
-                        : 'bg-slate-900 text-white border-slate-900'
-                      : dark
-                        ? 'bg-black/30 border-slate-800 text-slate-400 hover:border-slate-500 hover:text-white'
-                        : 'bg-slate-50 border-slate-200 text-slate-600 hover:border-slate-400 hover:text-slate-900'
-                    }`}
-                >
-                  {diff}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Audio Controls */}
-          <div>
-            <div className={`text-[10px] font-bold uppercase tracking-wider mb-2 ${dark ? 'text-slate-400' : 'text-slate-500'
-              }`}>
-              Audio Settings
-            </div>
-            <button
-              type="button"
-              onClick={() => { const m = audio.toggleMute(); setMuted(m); }}
-              className={`flex items-center justify-center gap-2 w-full py-2.5 rounded-[4px]
-                border text-xs font-bold transition-all cursor-pointer ${dark
-                  ? 'bg-black/30 border-slate-800 text-slate-400 hover:border-slate-500 hover:text-white'
-                  : 'bg-slate-50 border-slate-200 text-slate-600 hover:border-slate-400 hover:text-slate-900'
-                }`}
-            >
-              {muted
-                ? <><VolumeX className="w-4 h-4 text-red-500" /> Muted</>
-                : <><Volume2 className="w-4 h-4 text-emerald-500" /> Sound Enabled</>
-              }
-            </button>
-          </div>
-        </div>
-
-        {/* Controls reference (desktop only) */}
-        <div className={`hidden lg:block rounded-[4px] p-6 border ${dark ? 'bg-[#1a1a1c] border-slate-800' : 'bg-white border-slate-200'
-          }`}>
-          <h3 className={`text-xs font-bold uppercase tracking-wider mb-4 ${dark ? 'text-slate-455' : 'text-slate-500'
-            }`}>
-            Tactical Controls
-          </h3>
-          <ul className={`text-xs space-y-3 ${dark ? 'text-slate-400' : 'text-slate-600'}`}>
-            {([
-              ['↑ / W', 'Move Up'],
-              ['↓ / S', 'Move Down'],
-              ['← / A', 'Move Left'],
-              ['→ / D', 'Move Right'],
-              ['Space', 'Pause'],
-            ] as [string, string][]).map(([keys, action]) => (
-              <li
-                key={action}
-                className={`flex justify-between items-center border-b pb-2 ${dark ? 'border-slate-900' : 'border-slate-100'
-                  }`}
-              >
-                <kbd className={`border px-2 py-0.5 rounded-[4px] text-[10px] font-mono ${dark
-                    ? 'bg-black/50 border-slate-800 text-[#e8e8ea]'
-                    : 'bg-slate-100 border-slate-200 text-slate-800'
-                  }`}>
-                  {keys}
-                </kbd>
-                <span>{action}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        {/* Leaderboard */}
-        <div className={`rounded-[4px] p-6 flex-1 flex flex-col border ${dark ? 'bg-[#1a1a1c] border-slate-800' : 'bg-white border-slate-200'
-          }`}>
-          <h3 className={`text-xs font-bold uppercase tracking-wider mb-4 flex items-center gap-2 ${dark ? 'text-slate-455' : 'text-slate-500'
-            }`}>
-            <Award className={`w-4 h-4 ${dark ? 'text-slate-500' : 'text-slate-400'}`} />
-            Top Transmissions
-          </h3>
-          <div className="flex-1 overflow-y-auto max-h-[250px] space-y-2 pr-1">
-            {leaderboard.length === 0 ? (
-              <p className={`text-xs italic text-center py-6 ${dark ? 'text-slate-500' : 'text-slate-400'
-                }`}>
-                No transmission logs yet.
-              </p>
-            ) : (
-              leaderboard.slice(0, 5).map((entry, idx) => (
-                <div
-                  key={idx}
-                  className={`flex items-center justify-between py-2 px-3 rounded-[4px] border ${dark ? 'bg-black/20 border-slate-850' : 'bg-slate-50 border-slate-100'
-                    }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <span className={`text-[10px] font-bold font-mono ${dark ? 'text-slate-500' : 'text-slate-400'
-                      }`}>
-                      {String(idx + 1).padStart(2, '0')}
-                    </span>
-                    <span className={`text-xs font-semibold truncate max-w-[120px] ${dark ? 'text-slate-300' : 'text-slate-700'
-                      }`}>
-                      {entry.playerName}
-                    </span>
-                  </div>
-                  <span className={`text-xs font-bold font-mono ${dark ? 'text-white' : 'text-slate-900'
-                    }`}>
-                    {entry.score}
-                  </span>
+            {/* MOBILE D-PAD (Mobile: Order 2) */}
+            <div className="w-full flex flex-col items-center order-2 lg:hidden mt-4 mb-6">
+              <div className="flex flex-col items-center gap-3 w-full max-w-[320px]">
+                <div className="flex gap-3 justify-center">
+                  <div className="w-16 h-16" />
+                  <button onPointerDown={(e) => { e.preventDefault(); dpadMove('UP'); }} disabled={notPlaying} className={dpadBtnStyle}>▲</button>
+                  <div className="w-16 h-16" />
                 </div>
-              ))
-            )}
+                <div className="flex gap-3 justify-center">
+                  <button onPointerDown={(e) => { e.preventDefault(); dpadMove('LEFT'); }} disabled={notPlaying} className={dpadBtnStyle}>◀</button>
+                  <button onPointerDown={(e) => { e.preventDefault(); dpadMove('DOWN'); }} disabled={notPlaying} className={dpadBtnStyle}>▼</button>
+                  <button onPointerDown={(e) => { e.preventDefault(); dpadMove('RIGHT'); }} disabled={notPlaying} className={dpadBtnStyle}>▶</button>
+                </div>
+              </div>
+            </div>
+
+            {/* RIGHT PANEL (Leaderboard) */}
+            <div className="w-full flex flex-col gap-6 order-5 lg:order-3 self-start">
+              <div className="bg-[#121214] border border-slate-800 rounded-[4px] p-5 shadow-lg flex-1">
+                <h3 className="text-[10px] font-bold uppercase tracking-[0.15em] text-slate-500 mb-4 flex items-center gap-2">
+                  <Award className="w-3.5 h-3.5 text-cyan-500/70" /> Top Transmissions
+                </h3>
+
+                <div className="flex flex-col gap-2 overflow-y-auto max-h-[300px] pr-1">
+                  {leaderboard.length === 0 ? (
+                    <div className="text-xs italic text-slate-600 text-center py-6 border border-dashed border-slate-800/50 rounded-[2px]">
+                      No records found for {difficulty}.
+                    </div>
+                  ) : (
+                    leaderboard.slice(0, 8).map((entry, idx) => (
+                      <div key={idx} className="flex justify-between items-center text-xs bg-black/30 px-3 py-2.5 rounded-[2px] border border-slate-800/60 hover:border-slate-700 transition-colors">
+                        <div className="flex items-center gap-3">
+                          <span className="font-mono font-bold text-slate-600">{String(idx + 1).padStart(2, '0')}</span>
+                          <span className="font-bold text-slate-300 truncate max-w-[90px]">{entry.playerName}</span>
+                        </div>
+                        <span className="font-mono font-bold text-cyan-400 drop-shadow-[0_0_2px_rgba(6,182,212,0.5)]">{entry.score}</span>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            </div>
+
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };
