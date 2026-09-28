@@ -1,9 +1,11 @@
 import { storage } from './storage';
 
+type BgmTrack = 'snake' | 'brick' | 'cosmic' | 'pong' | 'flappy';
+
 class AudioManager {
   private ctx: AudioContext | null = null;
   private masterGain: GainNode | null = null;
-  private currentBgm: string | null = null;
+  private currentBgm: BgmTrack | null = null;
   private isMuted: boolean = false;
   private volume: number = storage.getVolume();
   private sequencerTimer: number | null = null;
@@ -304,7 +306,7 @@ class AudioManager {
     playNote(880.00, 0.08); // A5
   }
 
-  startBgm(game: 'snake' | 'brick' | 'cosmic' | 'pong' | 'flappy') {
+  startBgm(game: BgmTrack) {
     this.init();
     if (this.currentBgm === game) return;
     this.stopBgm();
@@ -391,21 +393,25 @@ class AudioManager {
     playTick();
   }
 
-  stopBgm() {
-    this.currentBgm = null;
-    if (this.sequencerTimer) {
+  private stopBgmTimer() {
+    if (this.sequencerTimer !== null) {
       clearTimeout(this.sequencerTimer);
       this.sequencerTimer = null;
     }
+  }
+
+  stopBgm() {
+    this.currentBgm = null;
+    this.stopBgmTimer();
   }
 
   toggleMute(): boolean {
     this.isMuted = !this.isMuted;
     this.applyGain();
     if (this.isMuted) {
-      this.stopBgm();
+      this.stopBgmTimer();
     } else if (this.currentBgm) {
-      const bgm = this.currentBgm as 'snake' | 'brick' | 'cosmic' | 'pong' | 'flappy';
+      const bgm = this.currentBgm;
       this.currentBgm = null;
       this.startBgm(bgm);
     }

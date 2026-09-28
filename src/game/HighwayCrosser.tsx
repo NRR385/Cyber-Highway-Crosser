@@ -248,10 +248,18 @@ export const HighwayCrosser: FC = () => {
       const target = e.target as HTMLElement | null;
       if (
         target &&
-        (target.tagName === 'INPUT' ||
-          target.tagName === 'TEXTAREA' ||
+        (target.tagName === 'TEXTAREA' ||
           target.tagName === 'SELECT' ||
-          target.isContentEditable)
+          target.isContentEditable ||
+          (target.tagName === 'INPUT' &&
+            (target as HTMLInputElement).type !== 'range'))
+      ) {
+        return;
+      }
+      if (
+        target?.tagName === 'INPUT' &&
+        (target as HTMLInputElement).type === 'range' &&
+        ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Home', 'End', 'PageUp', 'PageDown'].includes(e.code)
       ) {
         return;
       }
@@ -910,6 +918,8 @@ export const HighwayCrosser: FC = () => {
                     step={VOLUME_STEP}
                     value={volumePercent}
                     onChange={(e) => handleVolumeChange(Number(e.target.value))}
+                    onPointerUp={(e) => e.currentTarget.blur()}
+                    onPointerCancel={(e) => e.currentTarget.blur()}
                     aria-valuetext={`${volumePercent} percent`}
                   />
                 </div>
