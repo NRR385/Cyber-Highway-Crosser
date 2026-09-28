@@ -1,8 +1,11 @@
+import { storage } from './storage';
+
 class AudioManager {
   private ctx: AudioContext | null = null;
   private masterGain: GainNode | null = null;
   private currentBgm: string | null = null;
   private isMuted: boolean = false;
+  private volume: number = storage.getVolume();
   private sequencerTimer: number | null = null;
 
   init() {
@@ -10,11 +13,32 @@ class AudioManager {
     try {
       this.ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
       this.masterGain = this.ctx.createGain();
-      this.masterGain.gain.setValueAtTime(this.isMuted ? 0 : 1, this.ctx.currentTime);
+      this.masterGain.gain.setValueAtTime(this.targetGain(), this.ctx.currentTime);
       this.masterGain.connect(this.ctx.destination);
     } catch (e) {
       console.warn('AudioContext failed to initialize', e);
     }
+  }
+
+ 
+  private targetGain(): number {
+    return this.isMuted ? 0 : this.volume;
+  }
+
+  
+  private applyGain() {
+    if (!this.masterGain || !this.ctx) return;
+    this.masterGain.gain.setTargetAtTime(this.targetGain(), this.ctx.currentTime, 0.02);
+  }
+
+  setVolume(volume: number) {
+    this.volume = Math.min(1, Math.max(0, volume));
+    storage.saveVolume(this.volume);
+    this.applyGain();
+  }
+
+  getVolume() {
+    return this.volume;
   }
 
   playSnakeEat() {
@@ -377,9 +401,7 @@ class AudioManager {
 
   toggleMute(): boolean {
     this.isMuted = !this.isMuted;
-    if (this.masterGain && this.ctx) {
-      this.masterGain.gain.setValueAtTime(this.isMuted ? 0 : 1, this.ctx.currentTime);
-    }
+    this.applyGain();
     if (this.isMuted) {
       this.stopBgm();
     } else if (this.currentBgm) {
