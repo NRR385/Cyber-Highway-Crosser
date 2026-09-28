@@ -4,8 +4,7 @@ Thank you for your interest in contributing to Cyber Highway Crosser! This docum
 
 ## 📋 Project Overview
 
-Cyber Highway Crosser is a cyberpunk-themed arcade game built with React 19, TypeScript, Tailwind CSS v4, HTML5 Canvas, and the Web Audio API. It originated as an upstream open-source contribution to [QuickPlayZone](https://github.com/shamilahmdt/quickplay-zone) and is actively maintained here as a standalone project.
-
+Cyber Highway Crosser is a cyberpunk-themed arcade game built with React 19, TypeScript, Tailwind CSS v4, HTML5 Canvas, and the Web Audio API.
 ## 🛠️ Development Setup
 
 ### Prerequisites
