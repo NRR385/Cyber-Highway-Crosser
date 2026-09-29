@@ -8,7 +8,7 @@ import { storage } from '../core/storage';
 import { audio } from '../core/audio';
 import { useTheme } from '../context/ThemeContext';
 import {
-  Award, Play, Pause, RotateCcw, Volume2, VolumeX, Server,
+  Award, Play, Pause, Volume2, VolumeX, Server,
 } from 'lucide-react';
 import HIGHWAY_CONFIG, {
   LANE_CONFIGS, SAFE_ROWS, PLATFORM_ROWS, DIFFICULTY_SPEEDS, DIFFICULTY_SPAWN_INTERVALS,
@@ -25,6 +25,7 @@ const {
 
 const GAME_ID = 'highway_crosser';
 const DOCK_SLOT_W = CANVAS_W / DOCK_COUNT; // 96 px per dock slot
+const VOLUME_STEP = 5; // master volume slider granularity, in percent
 
 // Lookup: canvas row index → LANE_CONFIGS index (built once at module load)
 const ROW_TO_LANE_IDX = new Map<number, number>(
@@ -109,6 +110,7 @@ export const HighwayCrosser: FC = () => {
   >('IDLE');
   const [uiState, setUiState] = useState<'MENU' | 'BRIEFING' | 'DEPLOYING' | 'GAME'>('MENU');
   const [muted, setMuted] = useState(audio.getMuted());
+  const [volume, setVolume] = useState(audio.getVolume());
   const [leaderboard, setLeaderboard] = useState(
     () => storage.getLeaderboard(`${GAME_ID}_medium`),
   );
@@ -147,6 +149,15 @@ export const HighwayCrosser: FC = () => {
     const stats = storage.getGameStats(modeKey);
     setHighScore(stats.highScore);
     setLeaderboard(storage.getLeaderboard(modeKey));
+  };
+
+
+  const volumePercent = Math.round(volume * 100);
+
+  const handleVolumeChange = (percent: number) => {
+    const next = percent / 100;
+    audio.setVolume(next);
+    setVolume(next);
   };
 
   // ── BGM ───────────────────────────────────────────────────────────────────
@@ -233,6 +244,26 @@ export const HighwayCrosser: FC = () => {
   // ── Keyboard handler (depends on gameStatus + showNamePrompt) ────────────
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+    
+      const target = e.target as HTMLElement | null;
+      if (
+        target &&
+        (target.tagName === 'TEXTAREA' ||
+          target.tagName === 'SELECT' ||
+          target.isContentEditable ||
+          (target.tagName === 'INPUT' &&
+            (target as HTMLInputElement).type !== 'range'))
+      ) {
+        return;
+      }
+      if (
+        target?.tagName === 'INPUT' &&
+        (target as HTMLInputElement).type === 'range' &&
+        ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Home', 'End', 'PageUp', 'PageDown'].includes(e.code)
+      ) {
+        return;
+      }
+
       if (showNamePrompt) return;
 
       const movementCodes = [
@@ -857,10 +888,41 @@ export const HighwayCrosser: FC = () => {
                 </h3>
                 <button
                   onClick={() => { const m = audio.toggleMute(); setMuted(m); }}
+                  aria-pressed={muted}
                   className="w-full py-3.5 flex items-center justify-center gap-2 border border-slate-800 bg-black/40 hover:border-slate-600 hover:text-slate-300 text-slate-400 rounded-[2px] transition-colors cursor-pointer text-sm font-bold tracking-widest"
                 >
                   {muted ? <><VolumeX className="w-4 h-4 text-red-500" /> Audio Muted</> : <><Volume2 className="w-4 h-4 text-emerald-500" /> Audio Enabled</>}
                 </button>
+
+                <div className="flex flex-col gap-2">
+                  <div className="flex items-center justify-between">
+                    <label
+                      htmlFor="master-volume"
+                      className="text-xs font-bold uppercase tracking-[0.2em] text-slate-500"
+                    >
+                      Volume
+                    </label>
+                    <span className="text-xs font-mono text-cyan-400 tabular-nums">
+                      {volumePercent}%
+                    </span>
+                  </div>
+                  <input
+                    id="master-volume"
+                    type="range"
+                    className="chc-volume"
+                    style={{
+                      backgroundImage: `linear-gradient(to right, #06b6d4 0%, #06b6d4 ${volumePercent}%, #0a0a0c ${volumePercent}%, #0a0a0c 100%)`,
+                    }}
+                    min={0}
+                    max={100}
+                    step={VOLUME_STEP}
+                    value={volumePercent}
+                    onChange={(e) => handleVolumeChange(Number(e.target.value))}
+                    onPointerUp={(e) => e.currentTarget.blur()}
+                    onPointerCancel={(e) => e.currentTarget.blur()}
+                    aria-valuetext={`${volumePercent} percent`}
+                  />
+                </div>
 
                 <div className="hidden lg:block pt-5 border-t border-slate-800/50">
                   <h4 className="text-xs font-bold uppercase tracking-[0.2em] text-slate-600 mb-3">Controls</h4>

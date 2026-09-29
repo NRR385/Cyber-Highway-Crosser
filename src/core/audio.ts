@@ -1,8 +1,13 @@
+import { storage } from './storage';
+
+type BgmTrack = 'snake' | 'brick' | 'cosmic' | 'pong' | 'flappy';
+
 class AudioManager {
   private ctx: AudioContext | null = null;
   private masterGain: GainNode | null = null;
-  private currentBgm: string | null = null;
+  private currentBgm: BgmTrack | null = null;
   private isMuted: boolean = false;
+  private volume: number = storage.getVolume();
   private sequencerTimer: number | null = null;
 
   init() {
@@ -10,11 +15,32 @@ class AudioManager {
     try {
       this.ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
       this.masterGain = this.ctx.createGain();
-      this.masterGain.gain.setValueAtTime(this.isMuted ? 0 : 1, this.ctx.currentTime);
+      this.masterGain.gain.setValueAtTime(this.targetGain(), this.ctx.currentTime);
       this.masterGain.connect(this.ctx.destination);
     } catch (e) {
       console.warn('AudioContext failed to initialize', e);
     }
+  }
+
+ 
+  private targetGain(): number {
+    return this.isMuted ? 0 : this.volume;
+  }
+
+  
+  private applyGain() {
+    if (!this.masterGain || !this.ctx) return;
+    this.masterGain.gain.setTargetAtTime(this.targetGain(), this.ctx.currentTime, 0.02);
+  }
+
+  setVolume(volume: number) {
+    this.volume = Math.min(1, Math.max(0, volume));
+    storage.saveVolume(this.volume);
+    this.applyGain();
+  }
+
+  getVolume() {
+    return this.volume;
   }
 
   playSnakeEat() {
@@ -280,7 +306,7 @@ class AudioManager {
     playNote(880.00, 0.08); // A5
   }
 
-  startBgm(game: 'snake' | 'brick' | 'cosmic' | 'pong' | 'flappy') {
+  startBgm(game: BgmTrack) {
     this.init();
     if (this.currentBgm === game) return;
     this.stopBgm();
@@ -367,23 +393,25 @@ class AudioManager {
     playTick();
   }
 
-  stopBgm() {
-    this.currentBgm = null;
-    if (this.sequencerTimer) {
+  private stopBgmTimer() {
+    if (this.sequencerTimer !== null) {
       clearTimeout(this.sequencerTimer);
       this.sequencerTimer = null;
     }
   }
 
+  stopBgm() {
+    this.currentBgm = null;
+    this.stopBgmTimer();
+  }
+
   toggleMute(): boolean {
     this.isMuted = !this.isMuted;
-    if (this.masterGain && this.ctx) {
-      this.masterGain.gain.setValueAtTime(this.isMuted ? 0 : 1, this.ctx.currentTime);
-    }
+    this.applyGain();
     if (this.isMuted) {
-      this.stopBgm();
+      this.stopBgmTimer();
     } else if (this.currentBgm) {
-      const bgm = this.currentBgm as 'snake' | 'brick' | 'cosmic' | 'pong' | 'flappy';
+      const bgm = this.currentBgm;
       this.currentBgm = null;
       this.startBgm(bgm);
     }

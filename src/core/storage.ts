@@ -2,6 +2,12 @@ import type { ScoreEntry, GameStats } from "./types";
 
 const PREFIX = "chc_";
 
+export const DEFAULT_VOLUME = 0.6;
+
+
+const clampVolume = (value: number): number =>
+  Number.isFinite(value) ? Math.min(1, Math.max(0, value)) : DEFAULT_VOLUME;
+
 export const storage = {
   getGameStats(gameId: string): GameStats {
     const data = localStorage.getItem(`${PREFIX}stats_${gameId}`);
@@ -63,5 +69,18 @@ export const storage = {
     localStorage.setItem(`${PREFIX}leaderboard_${gameId}`, JSON.stringify(updated));
     this.updateHighScore(gameId, entry.score);
     return updated.some((e) => e.date === newEntry.date);
+  },
+
+  getVolume(): number {
+    const data = localStorage.getItem(`${PREFIX}volume`);
+    if (data !== null) {
+      const parsed = Number(data);
+      if (Number.isFinite(parsed)) return clampVolume(parsed);
+    }
+    return DEFAULT_VOLUME;
+  },
+
+  saveVolume(volume: number): void {
+    localStorage.setItem(`${PREFIX}volume`, String(clampVolume(volume)));
   },
 };
